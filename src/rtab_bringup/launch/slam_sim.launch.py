@@ -10,9 +10,8 @@ def generate_launch_description():
     pkg_rtab_bringup = get_package_share_directory('rtab_bringup')
     pkg_slam_toolbox = get_package_share_directory('slam_toolbox')
 
-    # Path to YAML configuration files
     slam_params_file = os.path.join(pkg_rtab_bringup, 'config', 'slam_sim.yaml')
-    laser_filter_file = os.path.join(pkg_rtab_bringup, 'config', 'laser_filter.yaml')
+
     # 1. Base simulation setup
     publish_bot_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
@@ -20,39 +19,91 @@ def generate_launch_description():
         )
     )
 
-    # 2. ROS-Gazebo Bridge for 2D Lidar Scan (Remapped to /scan_raw)
-    ros_gz_scan_bridge = Node(
+    # 2. Bridge Front LiDAR
+    ros_gz_front_scan_bridge = Node(
         package='ros_gz_bridge',
         executable='parameter_bridge',
+        name='gz_bridge_front_laser',
         arguments=[
-            '/scan@sensor_msgs/msg/LaserScan[gz.msgs.LaserScan'
-        ],
-        remappings=[
-            ('/scan', '/scan_raw')
+            '/scan_front@sensor_msgs/msg/LaserScan[gz.msgs.LaserScan'
         ],
         parameters=[{
-            'override_frame_id': 'laser_link'
+            'override_frame_id': 'laser_link',
+            'use_sim_time': True
         }],
         output='screen'
     )
 
-    # 3. Laser Filter Node (180-degree front constraint)
-    laser_filter_node = Node(
-        package='laser_filters',
-        executable='scan_to_scan_filter_chain',
-        name='laser_filter',
-        remappings=[
-            ('scan', '/scan_raw'),
-            ('scan_filtered', '/scan')
+    # 3. Bridge Rear LiDAR
+    ros_gz_rear_scan_bridge = Node(
+        package='ros_gz_bridge',
+        executable='parameter_bridge',
+        name='gz_bridge_rear_laser',
+        arguments=[
+            '/scan_rear@sensor_msgs/msg/LaserScan[gz.msgs.LaserScan'
         ],
-        parameters=[
-            laser_filter_file,
-            {'use_sim_time': True}
+        parameters=[{
+            'override_frame_id': 'rear_laser_link',
+            'use_sim_time': True
+        }],
+        output='screen'
+    )
+
+    # 4. Merge Dual LiDAR Scans into PointCloud
+    scan_merger_node = Node(
+        package='ros2_laser_scan_merger',
+        executable='ros2_laser_scan_merger',
+        name='laser_scan_merger',
+        parameters=[{
+            'use_sim_time': True,
+            'scanTopic1': '/scan_front',
+            'scanTopic2': '/scan_rear',
+            'pointCloudTopic': '/cloud_in',
+            'pointCloutFrameId': 'base_footprint',
+            'show1': True,
+            'show2': True,
+            # Front Lidar Offsets (from URDF laser_joint)
+            'laser1XOff': 0.1562,
+            'laser1YOff': 0.0,
+            'laser1ZOff': 0.1184,
+            'laser1Alpha': 0.0,
+            # Rear Lidar Offsets (from URDF rear_laser_joint)
+            'laser2XOff': -0.12,
+            'laser2YOff': 0.0,
+            'laser2ZOff': 0.18,
+            'laser2Alpha': 180.0
+        }],
+        output='screen'
+    )
+
+    # 5. Convert Merged PointCloud to 2D /scan for SLAM Toolbox
+    pointcloud_to_laserscan_node = Node(
+        package='pointcloud_to_laserscan',
+        executable='pointcloud_to_laserscan_node',
+        name='pointcloud_to_laserscan',
+        parameters=[{
+            'use_sim_time': True,
+            'target_frame': 'base_footprint',
+            'transform_tolerance': 0.01,
+            'min_height': -0.1,
+            'max_height': 1.0,
+            'angle_min': -3.14159,
+            'angle_max': 3.14159,
+            'angle_increment': 0.0087, # ~0.5 deg
+            'scan_time': 0.1,
+            'range_min': 0.12,
+            'range_max': 12.0,
+            'use_inf': True,
+            'inf_epsilon': 1.0
+        }],
+        remappings=[
+            ('cloud_in', '/cloud_in'),
+            ('scan', '/scan')
         ],
         output='screen'
     )
 
-    # 4. SLAM Toolbox (Includes automatic lifecycle management & custom params)
+    # 6. SLAM Toolbox
     slam_toolbox_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(pkg_slam_toolbox, 'launch', 'online_async_launch.py')
@@ -63,7 +114,7 @@ def generate_launch_description():
         }.items()
     )
 
-    # 5. RViz2 Node
+    # 7. RViz2 Node
     rviz_node = Node(
         package='rviz2',
         executable='rviz2',
@@ -74,8 +125,10 @@ def generate_launch_description():
 
     return LaunchDescription([
         publish_bot_launch,
-        ros_gz_scan_bridge,
-        laser_filter_node,
+        ros_gz_front_scan_bridge,
+        ros_gz_rear_scan_bridge,
+        scan_merger_node,
+        pointcloud_to_laserscan_node,
         slam_toolbox_launch,
         rviz_node
     ])

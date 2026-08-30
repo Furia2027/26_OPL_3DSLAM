@@ -13,16 +13,16 @@
   <!-- Base Link -->
   <link name="base_link">
     <inertial>
-      <origin xyz="-0.0251070620224986 0.00614048061720733 0.0609796911194103" rpy="0 0 0" />
+      <origin xyz="-0.0251070620224986 0.00614048061720733 0.0609796911194103" rpy="0 0 3.141592653589793" />
       <mass value="3.04966217910594" />
       <inertia
         ixx="0.0170838543964428" ixy="8.97603896378E-06" ixz="-0.000103914094165596"
         iyy="0.022263579823766" iyz="-1.53816933043532E-07" izz="0.0374090687091319" />
     </inertial>
     <visual>
-      <origin xyz="0 0 0" rpy="0 0 0" />
+      <origin xyz="0 0 0" rpy="0 0 3.141592653589793" />
       <geometry>
-        <mesh filename="package://wheeltec_robot_urdf/meshes/S100_diff_robot_meshes/base_link.stl"/>
+        <mesh filename="package://wheeltec_robot_urdf/meshes/S100_diff_robot_meshes/body.stl" scale = "0.001 0.001 0.001"/>
       </geometry>
       <material name="white">
         <color rgba="1 1 1 1" />
@@ -36,7 +36,7 @@
     </collision>
   </link>
 
-  <!-- Laser Link -->
+  <!-- Front Laser Link -->
   <link name="laser_link">
     <inertial>
       <origin xyz="0.0025063031131769 -4.56584106021334E-06 -0.0193246896050287" rpy="0 0 0" />
@@ -68,6 +68,39 @@
     <child link="laser_link" />
   </joint>
 
+  <!-- Rear Laser Link (LD06 LiDAR) -->
+  <link name="rear_laser_link">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <mass value="0.037" />
+      <inertia
+        ixx="0.000028" ixy="0" ixz="0"
+        iyy="0.000033" iyz="0" izz="0.000045" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://wheeltec_robot_urdf/meshes/S100_diff_robot_meshes/link_lidar.stl" />
+      </geometry>
+      <material name="dark_grey">
+        <color rgba="0.376470588235294 0.376470588235294 0.376470588235294 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <cylinder radius="0.035" length="0.04"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <!-- Positioned on top deck of the chassis, facing backward -->
+  <joint name="rear_laser_joint" type="fixed">
+    <origin xyz="-0.12 0 0.18" rpy="0 0 3.141592653589793" />
+    <parent link="base_link" />
+    <child link="rear_laser_link" />
+  </joint>
+
   <!-- Left Front Wheel -->
   <link name="lf_wheel_link">
     <inertial>
@@ -75,7 +108,7 @@
       <mass value="0.595489655285518" />
       <inertia
         ixx="0.000649719212067496" ixy="-1.0192314240505E-10" ixz="-4.88390115836518E-23"
-        iyy="0.001048172608967" iyz="-1.49485089493572E-19" izz="0.000649697264639401" />
+        iyy="0.001048172608967" iyz="-1.50279014522297E-19" izz="0.000649697264639401" />
     </inertial>
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0" />
@@ -194,22 +227,47 @@
     <child link="caster_right_link"/>
   </joint>
 
-  <!-- Gazebo Lidar Plugin -->
+  <!-- Gazebo Front Lidar Plugin (Constrained to Front 180 degrees) -->
   <gazebo reference="laser_link">
-    <sensor type="gpu_lidar" name="generic_laser">
+    <sensor type="gpu_lidar" name="front_laser">
       <update_rate>10</update_rate>
-      <topic>/scan</topic>
+      <topic>/scan_front</topic>
       <lidar>
         <scan>
           <horizontal>
-            <samples>360</samples>
+            <samples>180</samples>
             <resolution>1</resolution>
-            <min_angle>-3.14159</min_angle>
-            <max_angle>3.14159</max_angle>
+            <min_angle>-1.570796</min_angle> <!-- -90 deg -->
+            <max_angle>1.570796</max_angle>  <!-- +90 deg -->
           </horizontal>
         </scan>
         <range>
           <min>0.12</min>
+          <max>12.0</max>
+          <resolution>0.01</resolution>
+        </range>
+      </lidar>
+      <always_on>1</always_on>
+      <visualize>true</visualize>
+    </sensor>
+  </gazebo>
+
+  <!-- Gazebo Rear Lidar Plugin (Constrained to Rear 180 degrees via frame rotation) -->
+  <gazebo reference="rear_laser_link">
+    <sensor type="gpu_lidar" name="rear_laser">
+      <update_rate>10</update_rate>
+      <topic>/scan_rear</topic>
+      <lidar>
+        <scan>
+          <horizontal>
+            <samples>180</samples>
+            <resolution>1</resolution>
+            <min_angle>-1.570796</min_angle> <!-- -90 deg relative to rear frame -->
+            <max_angle>1.570796</max_angle>  <!-- +90 deg relative to rear frame -->
+          </horizontal>
+        </scan>
+        <range>
+          <min>0.05</min>
           <max>12.0</max>
           <resolution>0.01</resolution>
         </range>

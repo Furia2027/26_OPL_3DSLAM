@@ -71,7 +71,7 @@ def generate_launch_description():
         arguments=[
             '-topic', 'robot_description',
             '-name', 'wheeltec_oplbot',
-            '-x', '0.0',
+            '-x', '0.5',
             '-y', '0.0',
             '-z', '0.25'
         ],

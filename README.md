@@ -1,4 +1,4 @@
-# Human Recognition
+# 3D SLAM
 
 A ROS 2 workspace that functions for bot's self autonomous localization, mapping and navigation
 Note : Current version is still in progress and pending testing on simulations.

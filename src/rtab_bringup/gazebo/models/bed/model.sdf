@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sdf version="1.8">
+    <model name="Bed">
+        <static>true</static>
+        <link name="base_link">
+            <visual name="visual">
+                <geometry>
+                    <mesh>
+                        <uri>meshes/bed.dae</uri>
+                        <scale>0.5 0.5 0.5</scale>
+                    </mesh>
+                </geometry>
+                <material>
+                    <diffuse>1.0 1.0 1.0 1.0</diffuse>
+                    <specular>1.0 1.0 1.0 1.0</specular>
+                    <pbr>
+                        <metal>
+                            <albedo_map>materials/textures/Bed_Albedo.png</albedo_map>
+                            <normal_map>materials/textures/Bed_Normal.png</normal_map>
+                            <roughness_map>materials/textures/Bed_Roughness.png</roughness_map>
+                        </metal>
+                    </pbr>
+                </material>
+            </visual>
+            <collision name="Box001">
+                <pose>0.0 0.877252 0.29161 0.0 0.0 -1.5708</pose>
+                <geometry>
+                    <box>
+                        <size>0.031908 1.142505 0.58322</size>
+                    </box>
+                </geometry>
+            </collision>
+            <collision name="Box002">
+                <pose>0.0 -0.019858 0.107896 0.0 0.0 -1.5708</pose>
+                <geometry>
+                    <box>
+                        <size>1.766445 1.165357 0.215791</size>
+                    </box>
+                </geometry>
+            </collision>
+            <collision name="Box003">
+                <pose>-0.003008 0.672908 0.360808 1.5708 0.456787 -1.5708</pose>
+                <geometry>
+                    <box>
+                        <size>0.45546 0.353708 1.11192</size>
+                    </box>
+                </geometry>
+            </collision>
+            <collision name="Box004">
+                <pose>0.092609 0.270127 0.198145 1.5708 -0.125019 -1.5708</pose>
+                <geometry>
+                    <box>
+                        <size>0.45546 0.353708 1.496093</size>
+                    </box>
+                </geometry>
+            </collision>
+            <collision name="Box005">
+                <pose>0.122824 -0.390876 0.207122 0.0 0.0 -1.5708</pose>
+                <geometry>
+                    <box>
+                        <size>1.0422 1.53633 0.299777</size>
+                    </box>
+                </geometry>
+            </collision>
+        </link>
+    </model>
+</sdf>

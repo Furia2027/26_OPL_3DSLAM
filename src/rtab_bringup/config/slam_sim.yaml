@@ -1,0 +1,49 @@
+slam_toolbox:
+  ros__parameters:
+    use_sim_time: true
+    solver_plugin: solver_plugins::CeresSolver
+    ceres_linear_solver: SPARSE_NORMAL_CHOLESKY
+    ceres_preconditioner: SCHUR_JACOBI
+    ceres_trust_strategy: LEVENBERG_MARQUARDT
+
+    odom_frame: odom
+    map_frame: map
+    base_frame: base_footprint
+    scan_topic: /scan
+    mode: mapping
+
+    # Graph Update Spacing
+    map_update_interval: 1.0
+    minimum_time_interval: 0.1
+    minimum_travel_distance: 0.3    # Wait 30cm between pose updates
+    minimum_travel_heading: 0.3     # Wait ~17 degrees between pose updates
+    transform_publish_period: 0.02
+    throttle_scans: 1
+    max_laser_range: 10.0
+    scan_queue_size: 10
+    resolution: 0.05
+
+    # --- Prevents Pose Jumps & Glitches ---
+    use_scan_matching: true
+    use_scan_barycenter: true
+
+    # Restrict search distance to prevent jumping across rooms
+    loop_search_maximum_distance: 1.5
+
+    # Require higher confidence before accepting a match
+    minimum_response_fine: 0.3
+    link_match_minimum_response_fine: 0.3
+    loop_match_minimum_response_coarse: 0.6  # Default ~0.35 (Higher = Stricter)
+    loop_match_minimum_response_fine: 0.7    # Default ~0.45 (Higher = Stricter)
+    loop_match_minimum_chain_size: 15
+
+    # Penalize large discrepancies between Odometry and Lidar
+    distance_variance_penalty: 1.0   # Higher value forces SLAM to trust Odometry more
+    angle_variance_penalty: 1.5      # Higher value prevents sudden rotational jumps
+
+    fine_search_angle_offset: 0.00349
+    coarse_search_angle_offset: 0.349
+    coarse_angle_resolution: 0.0349
+    minimum_angle_penalty: 0.9
+    minimum_distance_penalty: 0.5
+    use_response_expansion: true

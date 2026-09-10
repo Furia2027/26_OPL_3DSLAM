@@ -20,18 +20,18 @@
         iyy="0.022263579823766" iyz="-1.53816933043532E-07" izz="0.0374090687091319" />
     </inertial>
     <visual>
-      <origin xyz="0 0 0" rpy="0 0 3.141592653589793" />
+      <origin xyz="-0.2 -0.16 0.23" rpy="0 0 1.57" />
       <geometry>
-        <mesh filename="package://wheeltec_robot_urdf/meshes/S100_diff_robot_meshes/body.stl" scale = "0.001 0.001 0.001"/>
+        <mesh filename="package://wheeltec_robot_urdf/meshes/S100_diff_robot_meshes/base.stl" scale = "0.001 0.001 0.001"/>
       </geometry>
       <material name="white">
         <color rgba="1 1 1 1" />
       </material>
     </visual>
     <collision>
-      <origin xyz="0 0 0.06" rpy="0 0 0" />
+      <origin xyz="-0.2 -0.16 0.23" rpy="0 0 1.57" />
       <geometry>
-        <box size="0.22 0.16 0.08"/>
+        <mesh filename="package://wheeltec_robot_urdf/meshes/S100_diff_robot_meshes/base.stl" scale = "0.001 0.001 0.001"/>
       </geometry>
     </collision>
   </link>
@@ -120,9 +120,9 @@
       </material>
     </visual>
     <collision>
-      <origin xyz="0 0 0" rpy="1.5707963267949 0 0" />
+      <origin xyz="0 0 0" rpy="0 0 0" />
       <geometry>
-        <cylinder radius="0.035" length="0.025"/>
+        <mesh filename="package://wheeltec_robot_urdf/meshes/S100_diff_robot_meshes/lf_wheel_link.stl" />
       </geometry>
     </collision>
   </link>
@@ -153,9 +153,9 @@
       </material>
     </visual>
     <collision>
-      <origin xyz="0 0 0" rpy="1.5707963267949 0 0" />
+      <origin xyz="0 0 0" rpy="0 0 0" />
       <geometry>
-        <cylinder radius="0.035" length="0.025"/>
+        <mesh filename="package://wheeltec_robot_urdf/meshes/S100_diff_robot_meshes/rf_wheel_link.stl" />
       </geometry>
     </collision>
   </link>
@@ -192,7 +192,7 @@
   </link>
 
   <joint name="caster_left_joint" type="fixed">
-    <origin xyz="-0.12 0.08 0.018" rpy="0 0 0"/>
+    <origin xyz="-0.12 0.08 -0.01" rpy="0 0 0"/>
     <parent link="base_link"/>
     <child link="caster_left_link"/>
   </joint>
@@ -222,7 +222,7 @@
   </link>
 
   <joint name="caster_right_joint" type="fixed">
-    <origin xyz="-0.12 -0.08 0.018" rpy="0 0 0"/>
+    <origin xyz="-0.12 -0.08 -0.01" rpy="0 0 0"/>
     <parent link="base_link"/>
     <child link="caster_right_link"/>
   </joint>
@@ -232,6 +232,7 @@
     <sensor type="gpu_lidar" name="front_laser">
       <update_rate>10</update_rate>
       <topic>/scan_front</topic>
+      <gz_frame_id>laser_link</gz_frame_id>
       <lidar>
         <scan>
           <horizontal>
@@ -257,6 +258,7 @@
     <sensor type="gpu_lidar" name="rear_laser">
       <update_rate>10</update_rate>
       <topic>/scan_rear</topic>
+      <gz_frame_id>rear_laser_link</gz_frame_id>
       <lidar>
         <scan>
           <horizontal>
@@ -299,7 +301,7 @@
       <left_joint>lf_wheel_joint</left_joint>
       <right_joint>rf_wheel_joint</right_joint>
       <wheel_separation>0.230168</wheel_separation>
-      <wheel_radius>0.035</wheel_radius>
+      <wheel_radius>0.065</wheel_radius>
       <topic>/cmd_vel</topic>
       <odom_topic>/odom</odom_topic>
       <tf_topic>/tf</tf_topic>

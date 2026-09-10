@@ -12,7 +12,7 @@ slam_toolbox:
     map_frame: map
     base_frame: base_footprint
     scan_topic: /scan
-    mode: mapping
+    mode: navigation
 
     # Map & Graph Update Spacing
     map_update_interval: 0.5

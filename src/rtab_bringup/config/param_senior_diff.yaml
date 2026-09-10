@@ -514,7 +514,7 @@ amcl:
     set_initial_pose: True
     initial_pose.x: 0.5
     initial_pose.y: 0.0
-    initial_pose.z: 0.0
+    initial_pose.z: 0.1
     initial_pose.yaw: 0.0
 
 amcl_map_client:
@@ -613,10 +613,10 @@ controller_server:
         critical_weight: 15.0
         consider_footprint: false
         collision_cost: 10000.0
-        collision_margin_distance: 0.1
+        collision_margin_distance: 0.05
         near_goal_distance: 0.4
         cost_scaling_factor: 5.0
-        inflation_radius: 0.25
+        inflation_radius: 0.35
       PreferForwardCritic:
         enabled: true
         cost_power: 2
@@ -662,12 +662,12 @@ local_costmap:
       width: 5
       height: 5
       resolution: 0.05
-      footprint: "[ [-0.21, -0.17], [-0.21, 0.17], [0.21, 0.17], [0.21, -0.17] ]"
+      footprint: "[ [-0.3, -0.3], [-0.3, 0.3], [0.25, 0.3], [0.25, -0.3] ]"
       plugins: ["voxel_layer", "inflation_layer"]
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
         cost_scaling_factor: 3.0
-        inflation_radius: 0.25
+        inflation_radius: 0.35
       voxel_layer:
         plugin: "nav2_costmap_2d::VoxelLayer"
         enabled: True
@@ -705,7 +705,7 @@ global_costmap:
       global_frame: map
       robot_base_frame: base_footprint
       use_sim_time: True
-      footprint: "[ [-0.21, -0.17], [-0.21, 0.17], [0.21, 0.17], [0.21, -0.17] ]"
+      footprint: "[ [-0.3, -0.3], [-0.3, 0.3], [0.25, 0.3], [0.25, -0.3] ]"
       resolution: 0.05
       track_unknown_space: true
       plugins: ["static_layer", "obstacle_layer", "inflation_layer"]
@@ -729,7 +729,7 @@ global_costmap:
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
         cost_scaling_factor: 3.0
-        inflation_radius: 0.25 
+        inflation_radius: 0.35
       always_send_full_costmap: True
 
   global_costmap_client:
@@ -869,20 +869,49 @@ collision_monitor:
 
     PolygonSlow:
       type: "polygon"
-      points: "[[0.55, 0.22], [0.55, -0.22], [-0.30, -0.22], [-0.30, 0.22]]"
+      # Warning zone (~4cm margin around footprint)
+      points: "[ [0.25, -0.28],
+                 [0.25,  0.28],
+                 [0.75,  0.28],
+                 [0.75, -0.28] ]"
+
       action_type: "slowdown"
       slowdown_ratio: 0.4
-      min_points: 5
+      min_points: 3 #12  # Increased from 5 to ignore isolated noise
       visualize: True
       polygon_pub_topic: "polygon_slow"
 
     PolygonStop:
       type: "polygon"
-      points: "[[0.35, 0.19], [0.35, -0.19], [-0.25, -0.19], [-0.25, 0.19]]"
+      # Tightened around local footprint [-0.21..0.21, -0.17..0.17] with 2cm margin
+      points: "[ [0.25, -0.28],
+                 [0.25,  0.28],
+                 [0.45,  0.28],
+                 [0.45, -0.28] ]"
+
       action_type: "stop"
-      min_points: 5
+      min_points: 2 #15
       visualize: True
       polygon_pub_topic: "polygon_stop"
+
+    # PolygonSlow:
+    #   type: "polygon"
+    #   # X: -0.35 to 0.65m | Y: -0.38 to +0.38m (Slowdown zone)
+    #   points: "[ [-0.35, -0.4], [-0.35, 0.4], [0.35, 0.4], [0.35, -0.4] ]"
+    #   action_type: "slowdown"
+    #   slowdown_ratio: 0.4
+    #   min_points: 5
+    #   visualize: True
+    #   polygon_pub_topic: "polygon_slow"
+
+    # PolygonStop:
+    #   type: "polygon"
+    #   # X: -0.32 to 0.42m | Y: -0.33 to +0.33m (Stop zone with 3cm safety buffer)
+    #   points: "[ [-0.3, -0.35], [-0.3, 0.35], [0.3, 0.35], [0.3, -0.35] ]"
+    #   action_type: "stop"
+    #   min_points: 5
+    #   visualize: True
+    #   polygon_pub_topic: "polygon_stop"
 
     observation_sources: ["scan"]
     scan:

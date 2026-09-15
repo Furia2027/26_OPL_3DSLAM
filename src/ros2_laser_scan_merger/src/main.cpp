@@ -73,7 +73,7 @@ private:
         temp_min_ = laser1_->angle_max;
         temp_max_ = laser1_->angle_min;
       }
-      for (float i = temp_min_; i <= temp_max_ && count < laser1_->ranges.size();
+      for (float i = temp_min_; i <= temp_max_ && count < static_cast<int>(laser1_->ranges.size());
            i += laser1_->angle_increment)
       {
         pcl::PointXYZRGB pt;
@@ -155,7 +155,7 @@ private:
         temp_min_ = laser2_->angle_max;
         temp_max_ = laser2_->angle_min;
       }
-      for (float i = temp_min_; i <= temp_max_ && count < laser2_->ranges.size();
+      for (float i = temp_min_; i <= temp_max_ && count < static_cast<int>(laser2_->ranges.size());
            i += laser2_->angle_increment)
       {
         pcl::PointXYZRGB pt;

@@ -15,6 +15,20 @@ def generate_launch_description():
         description='Set to true for pure localization mode using existing map database.'
     )
 
+    # Shared topic parameters matching your active ROS 2 topics
+    common_args = {
+        'rgb_topic': '/camera/color/image_raw',
+        'depth_topic': '/camera/depth/image_raw',
+        'camera_info_topic': '/camera/color/camera_info',
+        'scan_topic': '/ldlidar_node/scan',
+        'subscribe_scan': 'true',
+        'frame_id': 'base_link',
+        'approx_sync': 'true',
+        'use_sim_time': 'false',
+        'qos': '2',
+        'qos_camera_info': '2',
+    }
+
     # Mapping Mode (Creates/clears map)
     mapping_mode = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
@@ -22,15 +36,8 @@ def generate_launch_description():
         ),
         condition=UnlessCondition(LaunchConfiguration('localization')),
         launch_arguments={
+            **common_args,
             'rtabmap_args': '--delete_db_on_start',
-            'rgb_topic': '/camera/camera/color/image_raw',
-            'depth_topic': '/camera/camera/aligned_depth_to_color/image_raw',
-            'camera_info_topic': '/camera/camera/color/camera_info',
-            'scan_topic': '/ldlidar_node/scan',
-            'subscribe_scan': 'true',
-            'frame_id': 'base_link',
-            'approx_sync': 'true',
-            'use_sim_time': 'false',
         }.items()
     )
 
@@ -41,15 +48,8 @@ def generate_launch_description():
         ),
         condition=IfCondition(LaunchConfiguration('localization')),
         launch_arguments={
+            **common_args,
             'rtabmap_args': 'Mem/IncrementalMemory:=false Mem/InitWMWithAllNodes:=true',
-            'rgb_topic': '/camera/camera/color/image_raw',
-            'depth_topic': '/camera/camera/aligned_depth_to_color/image_raw',
-            'camera_info_topic': '/camera/camera/color/camera_info',
-            'scan_topic': '/ldlidar_node/scan',
-            'subscribe_scan': 'true',
-            'frame_id': 'base_link',
-            'approx_sync': 'true',
-            'use_sim_time': 'false',
         }.items()
     )
 

@@ -6,21 +6,15 @@ from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.actions import Node
 
 def generate_launch_description():
-    realsense_pkg = get_package_share_directory('realsense2_camera')
+    astra_pkg = get_package_share_directory('astra_camera')
     ldlidar_pkg = get_package_share_directory('ldlidar_node')
+    rtabmap_pkg = get_package_share_directory('rtabmap_launch')
 
-    # RealSense D455 Launch
-    realsense_launch = IncludeLaunchDescription(
+    # Orbbec DaBai Launch
+    dabai_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
-            os.path.join(realsense_pkg, 'launch', 'rs_launch.py')
-        ),
-        launch_arguments={
-            'align_depth.enable': 'true',
-            'enable_sync': 'true',
-            'initial_reset': 'false',
-            'rgb_camera.profile': '640x480x30',
-            'depth_module.profile': '640x480x30',
-        }.items()
+            os.path.join(astra_pkg, 'launch', 'dabai.launch.py')
+        )
     )
 
     # LD06 LiDAR Launch
@@ -49,7 +43,7 @@ def generate_launch_description():
     )
 
     return LaunchDescription([
-        realsense_launch,
+        dabai_launch,
         ldlidar_launch,
         tf_lidar,
         tf_camera

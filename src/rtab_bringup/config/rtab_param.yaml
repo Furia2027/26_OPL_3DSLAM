@@ -1,53 +1,98 @@
 rtabmap:
   ros__parameters:
-    use_sim_time: true
-    subscribe_depth: true
-    subscribe_rgb: true
-    subscribe_scan: true
-    subscribe_odom: true
-    subscribe_imu: false
-    topic_queue_size: 30
-    frame_id: "base_footprint"
-    odom_frame_id: "odom"
-    map_frame_id: "map"
-    approx_sync: true
-    approx_sync_max_interval: 0.1
-    qos_image: 2
-    qos_camera_info: 2
-    qos_scan: 2
-    qos_odom: 2
-    qos_imu: 2
-    RGBD/NeighborLinkRefining: "true"
-    RGBD/ProximityBySpace: "true"
-    RGBD/AngularUpdate: "0.05"
-    RGBD/LinearUpdate: "0.05"
-    Odom/ResetCountdown: "1"
-    RGBD/OdomLinearVariance: "0.01"
-    RGBD/OdomAngularVariance: "0.01"
-    Reg/Strategy: "1"
-    Icp/VoxelSize: "0.05"
-    Icp/MaxCorrespondenceDistance: "0.4"
-    Icp/CorrespondenceRatio: "0.2"
-    Icp/PointToPlane: "true"
-    Grid/FromDepth: "false"
-    Reg/Force3DoF: "true"
-    Mem/IncrementalMemory: "true"
-    Mem/SaveDepth16Format: "false"
-    Mem/DepthCompressionFormat: ".png"
-    Vis/MinInliers: "6"
-    GridDepth/MinDepth: "0.05"
-    GridDepth/MaxDepth: "10.0"
-    Vis/MinDepth: "0.05"
-    Vis/MaxDepth: "10.0"
-    tf_delay: 0.05
-    tf_tolerance: 0.2
-    wait_for_transform: 0.5
+    # --- Basic Framework & Frames ---
+    use_sim_time: true            # Use Gazebo simulation clock (/clock)
+    frame_id: "base_footprint"    # Base frame of the robot
+    odom_frame_id: "odom"          # Fixed odometry reference frame
+    map_frame_id: "map"            # Global reference frame for the map
+
+    # --- Sensor Subscriptions ---
+    subscribe_depth: true          # Subscribe to depth camera stream
+    subscribe_rgb: true            # Subscribe to RGB camera image stream
+    subscribe_scan: true           # Subscribe to 2D LiDAR scan stream (/scan)
+    subscribe_odom: true           # Subscribe to input odometry source
+    subscribe_imu: true            # Subscribe to IMU topic for gravity alignment
+
+    # --- Synchronization & Queue ---
+    approx_sync: true              # Use approximate time sync for non-exact sensor timestamps
+    approx_sync_max_interval: 0.1  # Max allowed time gap (seconds) between synchronized messages
+    topic_queue_size: 30           # Input buffer size for incoming sensor topics
+
+    # --- Quality of Service (QoS) ---
+    # Note: If Gazebo sensor_data publishes via Best Effort, change these to 1
+    qos_image: 2                   # QoS reliability for RGB image
+    qos_camera_info: 2             # QoS reliability for Camera Info
+    qos_scan: 2                    # QoS reliability for 2D LiDAR Scan
+    qos_odom: 2                    # QoS reliability for incoming Odometry
+    qos_imu: 2                     # QoS reliability for IMU
+
+    # --- TF & Transform Lookups ---
+    tf_delay: 0.05                 # Delay (s) before publishing map -> odom TF
+    tf_tolerance: 0.2              # Allowed TF lookup extrapolation tolerance (s)
+    wait_for_transform: 0.5        # Timeout (s) when waiting for TF lookup
+
+    # --- Operating Mode & Memory ---
+    Mem/IncrementalMemory: "true"      # "true" = SLAM Mapping Mode; "false" = Pure Localization
+    Mem/SaveDepth16Format: "false"     # Save raw depth in 32-bit floating point format
+    Mem/DepthCompressionFormat: ".png" # Compression format for stored depth frames
+
+    # --- 2D Constraints & Pose Graph Optimization ---
+    Reg/Force3DoF: "true"          # Restrict optimization to 2D plane (X, Y, Yaw) to eliminate Z-drift
+    Optimizer/Slam2D: "true"       # Optimize pose graph in 2D space
+    Optimizer/GravitySigma: "0.3"  # Standard deviation for IMU gravity alignment constraint
+
+    # --- Registration & Motion Filtering ---
+    Reg/Strategy: "2"              # 0=Visual, 1=ICP (LiDAR), 2=Visual + ICP combined
+    RGBD/NeighborLinkRefining: "true" # Refine incoming odometry links using scan matching
+    RGBD/ProximityBySpace: "true"  # Search for local loop closures when re-entering spatial areas
+    RGBD/LinearUpdate: "0.05"      # Minimum linear movement (m) required to add a keyframe
+    RGBD/AngularUpdate: "0.05"     # Minimum angular rotation (rad) required to add a keyframe
+    RGBD/OdomLinearVariance: "0.01"  # Linear variance weighting of incoming odometry
+    RGBD/OdomAngularVariance: "0.01" # Angular variance weighting of incoming odometry
+    Odom/ResetCountdown: "1"       # Auto-reset odometry if tracking lost after N frames
+
+    # --- ICP (LiDAR Scan-Matching) ---
+    Icp/VoxelSize: "0.05"               # Downsampling voxel grid size (m) for scan matching
+    Icp/MaxCorrespondenceDistance: "0.1"# Max distance (m) allowed between matched LiDAR points
+    Icp/CorrespondenceRatio: "0.2"     # Min point-overlap ratio needed for a valid match
+    Icp/PointToPlane: "false"           # Set false for 2D LiDAR scans (true for 3D point clouds)
+
+    # --- Visual Features & Depth Bounds ---
+    Vis/MinInliers: "6"            # Min feature matches required to trigger a visual loop closure
+    Grid/FromDepth: "false"        # Build 2D grid map from LiDAR scans ("false") rather than depth camera ("true")
+    GridDepth/MinDepth: "0.05"     # Minimum camera depth range (m) for occupancy grid
+    GridDepth/MaxDepth: "10.0"     # Maximum camera depth range (m) for occupancy grid
+    Vis/MinDepth: "0.05"           # Minimum camera depth range (m) for visual feature extraction
+    Vis/MaxDepth: "10.0"           # Maximum camera depth range (m) for visual feature extraction
+
+rtabmap_viz:
+  ros__parameters:
+    use_sim_time: true             # Use Gazebo simulation time
+    frame_id: "base_footprint"     # Base frame of the robot
+    odom_frame_id: "odom"          # Odometry reference frame
+    map_frame_id: "map"            # Global map frame
+
+    subscribe_depth: true          # Display depth camera feed
+    subscribe_rgb: true            # Display RGB camera feed
+    subscribe_scan: true           # Display 2D LiDAR scan feed
+    subscribe_odom: true           # Display active odometry stream
+    subscribe_imu: false           # Display IMU orientation vectors
+
+    # SensorData compatibility (Best Effort = 1)
+    qos_scan: 1
+    qos_image: 1
+    qos_camera_info: 1
+    qos_odom: 1
 
 icp_odometry:
   ros__parameters:
-    use_sim_time: true
-    frame_id: "base_footprint"
-    odom_frame_id: "odom"
-    publish_tf: true
-    Reg/Strategy: "1"
-    Icp/MaxCorrespondenceDistance: "0.4"
+    use_sim_time: true             # Use Gazebo simulation time
+    frame_id: "base_footprint"     # Base frame of the robot
+    odom_frame_id: "odom"          # Output odometry frame
+    publish_tf: true               # Publish the odom -> base_footprint transform
+
+    subscribe_scan: true           # Required: enables subscribing to /scan for ICP computation
+    qos_scan: 1                    # QoS setting matching Gazebo LiDAR publishers
+
+    Reg/Strategy: "1"              # Force 100% ICP scan-matching for odometry estimation
+    Icp/MaxCorrespondenceDistance: "0.4" # Search radius (m) for matching sequential LiDAR scans

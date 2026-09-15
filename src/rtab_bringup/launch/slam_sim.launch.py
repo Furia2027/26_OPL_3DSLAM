@@ -118,7 +118,23 @@ def generate_launch_description():
             ('depth/image', '/rtab_cam/depth_image'),
             ('rgb/camera_info', '/rtab_cam/camera_info'),
             ('scan', '/scan'),
-            ('odom', '/icp_odom'),
+            ('odom', '/odometry/filtered'),
+            ('imu', '/imu')
+        ]
+    )
+
+    rtabmap_viz_node = Node(
+        package='rtabmap_viz',
+        executable='rtabmap_viz',
+        name='rtabmap_viz',
+        output='screen',
+        parameters=[rtab_param_path],
+        remappings=[
+            ('rgb/image', '/rtab_cam/image'),
+            ('depth/image', '/rtab_cam/depth_image'),
+            ('rgb/camera_info', '/rtab_cam/camera_info'),
+            ('scan', '/scan'),
+            ('odom', '/odometry/filtered'),  # Use /odometry/filtered if using EKF output
             ('imu', '/imu')
         ]
     )
@@ -139,5 +155,6 @@ def generate_launch_description():
         pointcloud_to_laserscan_node,
         icp_odometry_node,
         rtabmap_node,
+        rtabmap_viz_node,
         rviz_node
     ])

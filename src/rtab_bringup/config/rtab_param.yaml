@@ -1,0 +1,53 @@
+rtabmap:
+  ros__parameters:
+    use_sim_time: true
+    subscribe_depth: true
+    subscribe_rgb: true
+    subscribe_scan: true
+    subscribe_odom: true
+    subscribe_imu: false
+    topic_queue_size: 30
+    frame_id: "base_footprint"
+    odom_frame_id: "odom"
+    map_frame_id: "map"
+    approx_sync: true
+    approx_sync_max_interval: 0.1
+    qos_image: 2
+    qos_camera_info: 2
+    qos_scan: 2
+    qos_odom: 2
+    qos_imu: 2
+    RGBD/NeighborLinkRefining: "true"
+    RGBD/ProximityBySpace: "true"
+    RGBD/AngularUpdate: "0.05"
+    RGBD/LinearUpdate: "0.05"
+    Odom/ResetCountdown: "1"
+    RGBD/OdomLinearVariance: "0.01"
+    RGBD/OdomAngularVariance: "0.01"
+    Reg/Strategy: "1"
+    Icp/VoxelSize: "0.05"
+    Icp/MaxCorrespondenceDistance: "0.4"
+    Icp/CorrespondenceRatio: "0.2"
+    Icp/PointToPlane: "true"
+    Grid/FromDepth: "false"
+    Reg/Force3DoF: "true"
+    Mem/IncrementalMemory: "true"
+    Mem/SaveDepth16Format: "false"
+    Mem/DepthCompressionFormat: ".png"
+    Vis/MinInliers: "6"
+    GridDepth/MinDepth: "0.05"
+    GridDepth/MaxDepth: "10.0"
+    Vis/MinDepth: "0.05"
+    Vis/MaxDepth: "10.0"
+    tf_delay: 0.05
+    tf_tolerance: 0.2
+    wait_for_transform: 0.5
+
+icp_odometry:
+  ros__parameters:
+    use_sim_time: true
+    frame_id: "base_footprint"
+    odom_frame_id: "odom"
+    publish_tf: true
+    Reg/Strategy: "1"
+    Icp/MaxCorrespondenceDistance: "0.4"

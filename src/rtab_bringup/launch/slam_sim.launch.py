@@ -8,18 +8,14 @@ from launch_ros.actions import Node
 
 def generate_launch_description():
     pkg_rtab_bringup = get_package_share_directory('rtab_bringup')
-    pkg_slam_toolbox = get_package_share_directory('slam_toolbox')
+    rtab_param_path = os.path.join(pkg_rtab_bringup, 'config', 'rtab_param.yaml')
 
-    slam_params_file = os.path.join(pkg_rtab_bringup, 'config', 'slam_sim.yaml')
-
-    # 1. Base simulation setup
     publish_bot_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(pkg_rtab_bringup, 'launch', 'publish_bot.launch.py')
         )
     )
 
-    # 2. Bridge Front LiDAR
     ros_gz_front_scan_bridge = Node(
         package='ros_gz_bridge',
         executable='parameter_bridge',
@@ -34,7 +30,6 @@ def generate_launch_description():
         output='screen'
     )
 
-    # 3. Bridge Rear LiDAR
     ros_gz_rear_scan_bridge = Node(
         package='ros_gz_bridge',
         executable='parameter_bridge',
@@ -49,7 +44,6 @@ def generate_launch_description():
         output='screen'
     )
 
-    # 4. Merge Dual LiDAR Scans into PointCloud
     scan_merger_node = Node(
         package='ros2_laser_scan_merger',
         executable='ros2_laser_scan_merger',
@@ -62,12 +56,10 @@ def generate_launch_description():
             'pointCloutFrameId': 'base_footprint',
             'show1': True,
             'show2': True,
-            # Front Lidar Offsets (from URDF laser_joint)
             'laser1XOff': 0.1562,
             'laser1YOff': 0.0,
             'laser1ZOff': 0.1184,
             'laser1Alpha': 0.0,
-            # Rear Lidar Offsets (from URDF rear_laser_joint)
             'laser2XOff': -0.12,
             'laser2YOff': 0.0,
             'laser2ZOff': 0.18,
@@ -76,7 +68,6 @@ def generate_launch_description():
         output='screen'
     )
 
-    # 5. Convert Merged PointCloud to 2D /scan for SLAM Toolbox
     pointcloud_to_laserscan_node = Node(
         package='pointcloud_to_laserscan',
         executable='pointcloud_to_laserscan_node',
@@ -89,7 +80,7 @@ def generate_launch_description():
             'max_height': 1.0,
             'angle_min': -3.14159,
             'angle_max': 3.14159,
-            'angle_increment': 0.0087, # ~0.5 deg
+            'angle_increment': 0.0087,
             'scan_time': 0.1,
             'range_min': 0.35,
             'range_max': 12.0,
@@ -103,18 +94,35 @@ def generate_launch_description():
         output='screen'
     )
 
-    # 6. SLAM Toolbox
-    slam_toolbox_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(pkg_slam_toolbox, 'launch', 'online_async_launch.py')
-        ),
-        launch_arguments={
-            'use_sim_time': 'true',
-            'slam_params_file': slam_params_file
-        }.items()
+    icp_odometry_node = Node(
+        package='rtabmap_odom',
+        executable='icp_odometry',
+        name='icp_odometry',
+        output='screen',
+        parameters=[rtab_param_path],
+        remappings=[
+            ('scan', '/scan'),
+            ('odom', '/icp_odom')
+        ]
     )
 
-    # 7. RViz2 Node
+    rtabmap_node = Node(
+        package='rtabmap_slam',
+        executable='rtabmap',
+        name='rtabmap',
+        output='screen',
+        arguments=['-d'],
+        parameters=[rtab_param_path],
+        remappings=[
+            ('rgb/image', '/rtab_cam/image'),
+            ('depth/image', '/rtab_cam/depth_image'),
+            ('rgb/camera_info', '/rtab_cam/camera_info'),
+            ('scan', '/scan'),
+            ('odom', '/icp_odom'),
+            ('imu', '/imu')
+        ]
+    )
+
     rviz_node = Node(
         package='rviz2',
         executable='rviz2',
@@ -129,6 +137,7 @@ def generate_launch_description():
         ros_gz_rear_scan_bridge,
         scan_merger_node,
         pointcloud_to_laserscan_node,
-        slam_toolbox_launch,
+        icp_odometry_node,
+        rtabmap_node,
         rviz_node
     ])

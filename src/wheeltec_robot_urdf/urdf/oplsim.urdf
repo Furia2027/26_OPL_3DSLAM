@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<robot name="wheeltec_robot">
+<robot name="wheeltec_robot" xmlns:xacro="http://www.ros.org/wiki/xacro">
 
   <!-- Base Footprint -->
   <link name="base_footprint"/>
@@ -728,31 +728,48 @@
     </plugin>
   </gazebo>
 
-  <!-- controller -->
-  <xacro:macro name="transmission_block" params="tran_name joint_name motor_name">
-    <transmission name="${tran_name}">
-        <type>transmission_interface/SimpleTransmission</type>
-        <joint name="${joint_name}">
-            <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
-        </joint>
-        <actuator name="$motor_name">
-            <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
-            <mechanicalReduction>1</mechanicalReduction>
-        </actuator>
-    </transmission>
-  </xacro:macro>
+    <!-- ROS 2 Control Hardware Tag -->
+  <ros2_control name="GazeboSimSystem" type="system">
+    <hardware>
+      <plugin>gz_ros2_control/GazeboSimSystem</plugin>
+    </hardware>
+    <joint name="joint1">
+      <command_interface name="position"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+    </joint>
+    <joint name="joint2">
+      <command_interface name="position"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+    </joint>
+    <joint name="joint3">
+      <command_interface name="position"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+    </joint>
+    <joint name="joint4">
+      <command_interface name="position"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+    </joint>
+    <joint name="joint5">
+      <command_interface name="position"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+    </joint>
+    <joint name="joint6">
+      <command_interface name="position"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+    </joint>
+  </ros2_control>
 
-  <xacro:transmission_block tran_name="tran1" joint_name="joint1" motor_name="motor1"/>
-  <xacro:transmission_block tran_name="tran2" joint_name="joint2" motor_name="motor2"/>
-  <xacro:transmission_block tran_name="tran3" joint_name="joint3" motor_name="motor3"/>
-  <xacro:transmission_block tran_name="tran4" joint_name="joint4" motor_name="motor4"/>
-  <xacro:transmission_block tran_name="tran5" joint_name="joint5" motor_name="motor5"/>
-  <xacro:transmission_block tran_name="tran6" joint_name="joint6" motor_name="motor6"/>
+  <xacro:arg name="controller_params_file" default="$(find wheeltec_robot_urdf)/config/ros2_controllers.yaml"/>
 
   <gazebo>
-    <plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so">
-        <robotNamespace>/gazebo</robotNamespace>
-        <legacyModeNS>true</legacyModeNS>
+    <plugin filename="gz_ros2_control-system" name="gz_ros2_control::GazeboSimROS2ControlPlugin">
+      <parameters>$(arg controller_params_file)</parameters>
     </plugin>
   </gazebo>
 

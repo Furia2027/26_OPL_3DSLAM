@@ -3,7 +3,9 @@ from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import IncludeLaunchDescription, SetEnvironmentVariable
 from launch.launch_description_sources import PythonLaunchDescriptionSource
+from launch.substitutions import Command
 from launch_ros.actions import Node
+from launch_ros.parameter_descriptions import ParameterValue
 
 
 def generate_launch_description():
@@ -22,10 +24,12 @@ def generate_launch_description():
         value=combined_gz_paths
     )
 
-    # URDF path and string loading
+    # URDF path and Xacro dynamic evaluation
     urdf_file_path = os.path.join(pkg_wheeltec_urdf, 'urdf', 'oplsim.urdf')
-    with open(urdf_file_path, 'r') as infp:
-        robot_desc = infp.read()
+    robot_desc = ParameterValue(
+        Command(['xacro ', urdf_file_path]),
+        value_type=str
+    )
 
     # World path definition
     world_file_path = os.path.join(pkg_rtab_bringup, 'gazebo', 'restaurant.sdf')

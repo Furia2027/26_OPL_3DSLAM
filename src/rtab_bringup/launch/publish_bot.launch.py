@@ -50,16 +50,22 @@ def generate_launch_description():
         }]
     )
 
-    # 3. ROS-Gazebo Bridge Node (Clock, Joint States, Cmd_Vel, Odom)
+    # 3. ROS-Gazebo Bridge Node (Clock, Joint States, Cmd_Vel, Odom, TF, Camera)
     ros_gz_bridge = Node(
         package='ros_gz_bridge',
         executable='parameter_bridge',
         arguments=[
+            # System & Navigation Bridges
             '/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock',
             '/joint_states@sensor_msgs/msg/JointState[gz.msgs.Model',
             '/cmd_vel@geometry_msgs/msg/Twist]gz.msgs.Twist',
             '/odom@nav_msgs/msg/Odometry[gz.msgs.Odometry',
-            '/tf@tf2_msgs/msg/TFMessage[gz.msgs.Pose_V'
+            '/tf@tf2_msgs/msg/TFMessage[gz.msgs.Pose_V',
+            # Depth Camera (Orbbec Astra / rtab_cam) Bridges
+            '/rtab_cam/image@sensor_msgs/msg/Image[gz.msgs.Image',
+            '/rtab_cam/depth_image@sensor_msgs/msg/Image[gz.msgs.Image',
+            '/rtab_cam/camera_info@sensor_msgs/msg/CameraInfo[gz.msgs.CameraInfo',
+            '/rtab_cam/points@sensor_msgs/msg/PointCloud2[gz.msgs.PointCloudPacked'
         ],
         output='screen'
     )

@@ -512,9 +512,9 @@ amcl:
     z_short: 0.15
     scan_topic: /scan
     set_initial_pose: True
-    initial_pose.x: 0.5
+    initial_pose.x: 0.0
     initial_pose.y: 0.0
-    initial_pose.z: 0.1
+    initial_pose.z: 0.0
     initial_pose.yaw: 0.0
 
 amcl_map_client:
@@ -532,7 +532,7 @@ bt_navigator:
     goal_reached_tol: 0.25
     global_frame: map
     robot_base_frame: base_footprint
-    odom_topic: /odom
+    odom_topic: /odometry/filtered
     bt_loop_duration: 10
     default_server_timeout: 20
     error_code_names:
@@ -548,7 +548,7 @@ controller_server:
     use_sim_time: True
     controller_frequency: 10.0
     controller_plugins: ["FollowPath"]
-    odom_topic: /odom
+    odom_topic: /odometry/filtered
 
     progress_checker_plugin: "progress_checker"
     goal_checker_plugin: "goal_checker"
@@ -809,7 +809,7 @@ velocity_smoother:
     min_velocity: [-0.1, 0.0, -0.5]
     max_accel: [1.5, 0.0, 1.5]
     max_decel: [-1.5, 0.0, -1.5]
-    odom_topic: "odom"
+    odom_topic: "/odometry/filtered"
     odom_duration: 0.1
     deadband_velocity: [0.0, 0.0, 0.0]
     velocity_timeout: 0.5

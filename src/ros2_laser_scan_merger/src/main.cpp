@@ -13,6 +13,8 @@
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 
 #include <cmath>
+#include <cstdint>
+#include <cstdlib>
 
 #include <string>
 #include <vector>
@@ -26,9 +28,6 @@ public:
   {
     initialize_params();
     refresh_params();
-
-    laser1_ = std::make_shared<sensor_msgs::msg::LaserScan>();
-    laser2_ = std::make_shared<sensor_msgs::msg::LaserScan>();
 
     auto default_qos = rclcpp::QoS(rclcpp::SensorDataQoS());
     sub1_ = this->create_subscription<sensor_msgs::msg::LaserScan>(
@@ -44,15 +43,66 @@ private:
   void scan_callback1(const sensor_msgs::msg::LaserScan::SharedPtr _msg)
   {
     laser1_ = _msg;
-    update_point_cloud_rgb();
+    laser1_pending_ = true;
+    refresh_params();
+    if (!show2_)
+    {
+      update_point_cloud_rgb();
+      laser1_pending_ = false;
+      return;
+    }
+    try_publish_synchronized_pair();
     // RCLCPP_INFO(this->get_logger(), "I heard: '%f' '%f'", _msg->ranges[0],
     //         _msg->ranges[100]);
   }
   void scan_callback2(const sensor_msgs::msg::LaserScan::SharedPtr _msg)
   {
     laser2_ = _msg;
+    laser2_pending_ = true;
+    refresh_params();
+    if (!show1_)
+    {
+      update_point_cloud_rgb();
+      laser2_pending_ = false;
+      return;
+    }
+    try_publish_synchronized_pair();
     // RCLCPP_INFO(this->get_logger(), "I heard: '%f' '%f'", _msg->ranges[0],
     //         _msg->ranges[100]);
+  }
+
+  static int64_t stamp_nanoseconds(const builtin_interfaces::msg::Time &stamp)
+  {
+    return static_cast<int64_t>(stamp.sec) * 1000000000LL + stamp.nanosec;
+  }
+
+  void try_publish_synchronized_pair()
+  {
+    if (!laser1_pending_ || !laser2_pending_ || !laser1_ || !laser2_)
+    {
+      return;
+    }
+
+    const int64_t stamp1 = stamp_nanoseconds(laser1_->header.stamp);
+    const int64_t stamp2 = stamp_nanoseconds(laser2_->header.stamp);
+    const int64_t max_delta = static_cast<int64_t>(maxScanSyncInterval_ * 1e9);
+    const int64_t delta = stamp1 - stamp2;
+    if (std::llabs(delta) <= max_delta)
+    {
+      update_point_cloud_rgb();
+      laser1_pending_ = false;
+      laser2_pending_ = false;
+    }
+    else if (delta < 0)
+    {
+      // The front scan is older; wait for a newer front scan to pair with rear.
+      laser1_pending_ = false;
+    }
+    else
+    {
+      // The rear scan is older; wait for a newer rear scan to pair with front.
+      laser2_pending_ = false;
+    }
   }
 
   void update_point_cloud_rgb()
@@ -230,12 +280,18 @@ private:
     auto pc2_msg_ = std::make_shared<sensor_msgs::msg::PointCloud2>();
     pcl::toROSMsg(cloud_, *pc2_msg_);
     pc2_msg_->header.frame_id = cloudFrameId_;
-    pc2_msg_->header.stamp = now();
-    if (show1_ && laser1_)
+    if (show1_ && show2_ && laser1_ && laser2_)
+    {
+      const int64_t midpoint = (stamp_nanoseconds(laser1_->header.stamp) +
+                                stamp_nanoseconds(laser2_->header.stamp)) / 2;
+      pc2_msg_->header.stamp.sec = static_cast<int32_t>(midpoint / 1000000000LL);
+      pc2_msg_->header.stamp.nanosec = static_cast<uint32_t>(midpoint % 1000000000LL);
+    }
+    else if (show1_ && laser1_)
     {
       pc2_msg_->header.stamp = laser1_->header.stamp;
     }
-    if (show2_ && laser2_)
+    else if (show2_ && laser2_)
     {
       pc2_msg_->header.stamp = laser2_->header.stamp;
     }
@@ -291,6 +347,7 @@ private:
   {
     this->declare_parameter("pointCloudTopic", "base/custom_cloud");
     this->declare_parameter("pointCloutFrameId", "laser");
+    this->declare_parameter("maxScanSyncInterval", 0.04);
 
     this->declare_parameter("scanTopic1", "lidar_front_right/scan");
     this->declare_parameter("laser1XOff", -0.45);
@@ -324,6 +381,7 @@ private:
   {
     this->get_parameter_or<std::string>("pointCloudTopic", cloudTopic_, "pointCloud");
     this->get_parameter_or<std::string>("pointCloutFrameId", cloudFrameId_, "laser");
+    this->get_parameter_or<double>("maxScanSyncInterval", maxScanSyncInterval_, 0.04);
     this->get_parameter_or<std::string>("scanTopic1", topic1_, "lidar_front_right/scan");
     this->get_parameter_or<float>("laser1XOff", laser1XOff_, 0.0);
     this->get_parameter_or<float>("laser1YOff", laser1YOff_, 0.0);
@@ -353,6 +411,9 @@ private:
   }
   std::string topic1_, topic2_, cloudTopic_, cloudFrameId_;
   bool show1_, show2_, flip1_, flip2_, inverse1_, inverse2_;
+  bool laser1_pending_{false};
+  bool laser2_pending_{false};
+  double maxScanSyncInterval_{0.04};
   float laser1XOff_, laser1YOff_, laser1ZOff_, laser1Alpha_, laser1AngleMin_, laser1AngleMax_;
   uint8_t laser1R_, laser1G_, laser1B_;
 

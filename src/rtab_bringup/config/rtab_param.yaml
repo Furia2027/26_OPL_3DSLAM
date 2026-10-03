@@ -78,8 +78,8 @@ rtabmap_viz:
     subscribe_odom: true           # Display active odometry stream
     subscribe_imu: false           # Display IMU orientation vectors
 
-    # SensorData compatibility (Best Effort = 1)
-    qos_scan: 1
+    # Best-effort scan publisher from pointcloud_to_laserscan
+    qos_scan: 2
     qos_image: 1
     qos_camera_info: 1
     qos_odom: 1
@@ -89,10 +89,13 @@ icp_odometry:
     use_sim_time: true             # Use Gazebo simulation time
     frame_id: "base_footprint"     # Base frame of the robot
     odom_frame_id: "odom"          # Output odometry frame
-    publish_tf: true               # Publish the odom -> base_footprint transform
+    publish_tf: false              # EKF is the sole odom -> base_footprint TF publisher
 
     subscribe_scan: true           # Required: enables subscribing to /scan for ICP computation
-    qos_scan: 1                    # QoS setting matching Gazebo LiDAR publishers
+    qos: 2                         # Subscribe with best effort to /scan
+    publish_null_when_lost: false  # Do not feed invalid zero poses into the EKF
 
     Reg/Strategy: "1"              # Force 100% ICP scan-matching for odometry estimation
     Icp/MaxCorrespondenceDistance: "0.4" # Search radius (m) for matching sequential LiDAR scans
+    Icp/CorrespondenceRatio: "0.2" # Reject low-overlap matches that can cause pose jumps
+    Icp/MaxTranslation: "0.5"      # Allow scan odometry to recover from larger contact displacements

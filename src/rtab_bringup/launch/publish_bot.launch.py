@@ -82,19 +82,42 @@ def generate_launch_description():
             'world_frame': 'odom',
             'odom0': '/odom',
             'odom0_config': [False, False, False,
-                            False, False, True,
-                            True, False, False,
-                            False, False, True,
-                            False, False, False],
+                             False, False, False,
+                             True, False, False,
+                             False, False, False,
+                             False, False, False],
+            'odom1': '/icp_odom',
+            'odom1_config': [True, True, False,
+                             False, False, True,
+                             False, False, False,
+                             False, False, False,
+                             False, False, False],
+            'odom1_queue_size': 5,
+            'odom1_differential': False,
             'imu0': '/imu',
             'imu0_config': [False, False, False,
-                           False, False, True,     # Fuse Yaw angle only
-                           False, False, False,
-                           False, False, True,     # Fuse Yaw angular velocity
-                           False, False, False],    # Fuse X-axis linear acceleration
+                            False, False, False,    # Leave zero-covariance absolute yaw unused
+                            False, False, False,
+                            False, False, True,     # Fuse yaw angular velocity
+                            False, False, False],    # Linear acceleration remains disabled
             'imu0_differential': False,
             'imu0_relative': True
         }]
+    )
+
+    # Scan-matching odometry observes real displacement during wheel slip/contact.
+    # Its TF output is disabled; the EKF fuses /icp_odom and publishes the sole
+    # odom -> base_footprint transform.
+    icp_odometry_node = Node(
+        package='rtabmap_odom',
+        executable='icp_odometry',
+        name='icp_odometry',
+        output='screen',
+        parameters=[os.path.join(pkg_rtab_bringup, 'config', 'rtab_param.yaml')],
+        remappings=[
+            ('scan', '/scan'),
+            ('odom', '/icp_odom')
+        ]
     )
 
     spawn_robot = Node(
@@ -115,6 +138,7 @@ def generate_launch_description():
         gz_sim,
         robot_state_publisher,
         ros_gz_bridge,
+        icp_odometry_node,
         robot_localization_node,
         spawn_robot
     ])

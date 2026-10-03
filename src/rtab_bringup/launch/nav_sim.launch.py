@@ -13,7 +13,7 @@ def generate_launch_description():
 
     # File Paths
     nav2_params_file = os.path.join(pkg_rtab_bringup, 'config', 'param_senior_diff.yaml')
-    default_map_path = os.path.join(pkg_rtab_bringup, 'config', 'map.yaml')
+    default_map_path = os.path.join(pkg_rtab_bringup, 'config', 'my_map.yaml')
 
     map_arg = DeclareLaunchArgument(
         'map',
@@ -65,6 +65,7 @@ def generate_launch_description():
         name='laser_scan_merger',
         parameters=[{
             'use_sim_time': True,
+            'maxScanSyncInterval': 0.04,
             'scanTopic1': '/scan_front',
             'scanTopic2': '/scan_rear',
             'pointCloudTopic': '/cloud_in',
@@ -75,9 +76,9 @@ def generate_launch_description():
             'laser1YOff': 0.0,
             'laser1ZOff': 0.1184,
             'laser1Alpha': 0.0,
-            'laser2XOff': -0.12,
+            'laser2XOff': -0.2,
             'laser2YOff': 0.0,
-            'laser2ZOff': 0.18,
+            'laser2ZOff': 0.073,
             'laser2Alpha': 180.0
         }],
         output='screen'

@@ -50,6 +50,7 @@ def generate_launch_description():
         name='laser_scan_merger',
         parameters=[{
             'use_sim_time': True,
+            'maxScanSyncInterval': 0.04,
             'scanTopic1': '/scan_front',
             'scanTopic2': '/scan_rear',
             'pointCloudTopic': '/cloud_in',
@@ -60,9 +61,9 @@ def generate_launch_description():
             'laser1YOff': 0.0,
             'laser1ZOff': 0.1184,
             'laser1Alpha': 0.0,
-            'laser2XOff': -0.12,
+            'laser2XOff': -0.2,
             'laser2YOff': 0.0,
-            'laser2ZOff': 0.18,
+            'laser2ZOff': 0.073,
             'laser2Alpha': 180.0
         }],
         output='screen'
@@ -92,18 +93,6 @@ def generate_launch_description():
             ('scan', '/scan')
         ],
         output='screen'
-    )
-
-    icp_odometry_node = Node(
-        package='rtabmap_odom',
-        executable='icp_odometry',
-        name='icp_odometry',
-        output='screen',
-        parameters=[rtab_param_path],
-        remappings=[
-            ('scan', '/scan'),
-            ('odom', '/icp_odom')
-        ]
     )
 
     rtabmap_node = Node(
@@ -153,7 +142,6 @@ def generate_launch_description():
         ros_gz_rear_scan_bridge,
         scan_merger_node,
         pointcloud_to_laserscan_node,
-        icp_odometry_node,
         rtabmap_node,
         rtabmap_viz_node,
         rviz_node
